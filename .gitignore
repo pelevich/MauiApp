@@ -1,0 +1,120 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/Debug/
+**/Release/
+**/x64/
+**/x86/
+**/ARM/
+**/ARM64/
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+*.csproj.user
+
+# PDFium binaries (large files, should NOT be in git)
+pdfium.dll
+pdfium.lib
+**/pdfium.dll
+**/pdfium.lib
+**/pdfium/*.dll
+**/pdfium/*.lib
+**/pdfium/*.so
+**/pdfium/*.dylib
+**/pdfium/*.a
+
+# CMake build artifacts
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+**/build/
+**/out/build/
+**/out/install/
+
+# Compiled C++ files
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+
+# MAUI specific
+**/Platforms/
+**/Resources/raw/
+**/Resources/stitchedcontent/
+**/MauiProgram.cs.obj
+
+# iOS/macOS
+**/bin/iPhoneSimulator/
+**/bin/iPhone/
+**/obj/iPhoneSimulator/
+**/obj/iPhone/
+*.app
+*.app.dSYM
+*.ipa
+
+# Android
+*.apk
+*.aab
+*.keystore
+*.apk.manifest
+
+# Windows
+*.msix
+*.msixbundle
+*.appx
+
+# NuGet packages
+**/packages/
+*.nupkg
+!packages/repositories.config
+
+# Test results
+**/TestResults/
+*.trx
+*.coverage
+
+# Logs
+*.log
+*.logs
+
+# Temp files
+*.tmp
+*.temp
+*.cache
+
+# OS generated files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# User-specific files
+*.local.json
+**/appsettings.Development.json
+**/secrets.json
+.env
+
+# CMake user presets (локальные настройки)
+CMakeUserPresets.json
+**/CMakeUserPresets.json
+
+# Intellisense
+*.ipch
+**/.vs/
+
+# Code generation
+**/generated/
+**/xaml-generated/
