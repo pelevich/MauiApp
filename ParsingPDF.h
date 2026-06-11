@@ -1,9 +1,10 @@
 #pragma once
 #include <iostream>
-#include <fpdfview.h>
-#include <fpdf_text.h>
+#include "pdfium/include/fpdfview.h"
+#include "pdfium/include/fpdf_text.h"
 #include <vector>
 #include <string>
+#include <cmath>
 
 using namespace std;
 

@@ -4,8 +4,8 @@
 #pragma once
 
 #include <iostream>
-
-#include <fpdfview.h>
-#include <fpdf_text.h>
+#include <string>
+#include "pdfium/include/fpdfview.h"
+#include "pdfium/include/fpdf_text.h"
 
 // TODO: установите здесь ссылки на дополнительные заголовки, требующиеся для программы.

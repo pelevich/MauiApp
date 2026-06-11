@@ -1,0 +1,10 @@
+.git/
+.vs/
+build/
+*.exe
+*.dll
+*.pdb
+*.user
+*.suo
+Debug/
+Release/

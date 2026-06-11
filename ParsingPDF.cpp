@@ -75,7 +75,7 @@ int ParsingPDF::GetNumberRows(FPDF_TEXTPAGE text_page) {
     for (int i = 0; i < numbr_symbol;i++) {
         FPDFText_GetCharBox(text_page, i, NULL, NULL, &bottom, NULL);
 
-        if (abs(bottom - y) > 10) {
+        if (fabs(bottom - y) > 10) {
             count++;
             y = bottom;
         }

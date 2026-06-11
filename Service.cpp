@@ -5,23 +5,21 @@
 /// <summary>
 /// </summary>
 Service::Service(string name) {
-    string path = "\\\\.\\pipe\\" + name;
-    hPipe = CreateFileA(
-        path.c_str(),
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL
-    );
+    string path = "/tmp/" + name;
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
+    connect(sock, (struct sockaddr*)&addr, sizeof(addr));
 }
 
 /// <summary>
 /// Отключаемся от пайпов
 /// </summary>
 Service::~Service() {
-    CloseHandle(hPipe);
+    close(sock);
 }
 
 /// <summary>
@@ -30,19 +28,21 @@ Service::~Service() {
 /// </summary>
 /// <param name="name">Имя пайпа для подключения</param>
 /// <returns>Возвращаем дескриптор пайпа</returns>
-HANDLE Service::ConnectedServer(string name) {
-    string path = "\\\\.\\pipe\\" + name;
-    hPipe = CreateFileA(
-        path.c_str(),
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL
-    );
+int Service::ConnectedServer(string name) {
+    string path = "/tmp/" + name;
 
-    return hPipe;
+    if (sock >= 0) {
+        close(sock);
+    }
+
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
+
+    return sock;
 }
 
 /// <summary>
@@ -52,10 +52,14 @@ HANDLE Service::ConnectedServer(string name) {
 /// <param name="buffer">Ссылка на буффер для записи</param>
 /// <param name="size">Размер буффера</param>
 /// <returns>Возвращаем 1 в случае успеха, иначе 0</returns>
-bool Service::Read(HANDLE hPipe, char* buffer, DWORD size) {
+bool Service::Read(int sock, char* buffer, size_t size) {
+    int totalRead = 0;
     memset(buffer, 0, size);
-    bool result = ReadFile(hPipe, buffer, size - 1, &dwRead, NULL);
-    return result;
+    while (totalRead < size - 1) {
+        ssize_t bytes_read = recv(sock, buffer, size - 1, 0);
+        totalRead += bytes_read;
+    }
+    return totalRead > 0;
 }
 
 /// <summary>
@@ -64,7 +68,7 @@ bool Service::Read(HANDLE hPipe, char* buffer, DWORD size) {
 /// <param name="hPipe">Дескриптор пайпа для отправки сообщения</param>
 /// <param name="send_message">Отправляемое сообщение</param>
 /// <returns>Возвращаем 1 в случае успеха, иначе 0</returns>
-bool Service::Write(HANDLE hPipe, string& send_message) {
-    bool result = WriteFile(hPipe, send_message.c_str(), send_message.size(), &dwWritten, NULL);
-    return result;
+bool Service::Write(int sock, const string& send_message) {
+    ssize_t bytes_written = send(sock, send_message.c_str(), send_message.size(), 0);
+    return bytes_written > 0;
 }

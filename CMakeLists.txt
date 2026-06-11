@@ -1,50 +1,77 @@
-﻿# CMakeList.txt: проект CMake для MauiApp
-
+﻿# CMakeLists.txt для Linux (MauiApp)
 cmake_minimum_required(VERSION 3.10)
-
-# Включение горячей перезагрузки для компиляторов MSVC
-if (POLICY CMP01141)
-    cmake_policy(SET CMP01141 NEW)
-    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<AND:$<COMPILER_ID:MSVC>,$<$CONFIG:Debug,RelWithDebInfo>:EditAndContinue,$<$CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
-
 project("MauiApp")
 
-# Устанавливаем стандарт C++
+# Устанавливаем стандарт C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Добавляем все исходники в исполняемый файл
+# ВАЖНО: Добавляем опции для статической линковки (чтобы бинарник был самодостаточным)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
+
+# Путь к PDFium
+set(PDFIUM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pdfium)
+
+# Проверяем, что PDFium существует
+if(NOT EXISTS ${PDFIUM_DIR}/include)
+    message(FATAL_ERROR "PDFium include directory not found: ${PDFIUM_DIR}/include")
+endif()
+
+if(NOT EXISTS ${PDFIUM_DIR}/lib)
+    message(FATAL_ERROR "PDFium lib directory not found: ${PDFIUM_DIR}/lib")
+endif()
+
+message(STATUS "PDFIUM_DIR: ${PDFIUM_DIR}")
+
+# Добавляем все исходники
 add_executable(MauiApp 
     "MauiApp.cpp" 
-    "MauiApp.h" 
-    "Service.h" 
     "Service.cpp" 
-    "ParsingPDF.cpp" 
-    "ParsingPDF.h" 
-    "fpdfview.h" 
-    "fpdf_text.h"
+    "ParsingPDF.cpp"
 )
 
-# Указываем директорию для поиска заголовков
-target_include_directories(MauiApp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-# 🔧 ИСПРАВЛЕНО: Правильный способ подключить pdfium.lib
-# Создаем импортируемую библиотеку
-add_library(pdfium STATIC IMPORTED)
-
-# Указываем полный путь к .lib файлу
-set_target_properties(pdfium PROPERTIES
-    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/pdfium.lib"
+# Указываем директории для поиска заголовков
+target_include_directories(MauiApp PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PDFIUM_DIR}/include
 )
 
-# Линкуем библиотеку с проектом
-target_link_libraries(MauiApp pdfium)
+# Указываем директорию для поиска библиотек
+target_link_directories(MauiApp PRIVATE
+    ${PDFIUM_DIR}/lib
+)
 
-# Копируем DLL в папку с EXE при сборке
+# Определяем, какая библиотека PDFium доступна
+if(EXISTS "${PDFIUM_DIR}/lib/libpdfium.a")
+    set(PDFIUM_LIB "${PDFIUM_DIR}/lib/libpdfium.a")
+    message(STATUS "Found static PDFium library")
+elseif(EXISTS "${PDFIUM_DIR}/lib/libpdfium.so")
+    set(PDFIUM_LIB pdfium)
+    message(STATUS "Found shared PDFium library")
+else()
+    message(FATAL_ERROR "PDFium library not found (.a or .so)")
+endif()
+
+# Линкуем библиотеки
+target_link_libraries(MauiApp
+    ${PDFIUM_LIB}
+    pthread
+    dl
+    stdc++fs  # для файловой системы C++17
+)
+
+# Если используете shared library (.so), копируем её
+if(NOT EXISTS "${PDFIUM_DIR}/lib/libpdfium.a")
+    add_custom_command(TARGET MauiApp POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PDFIUM_DIR}/lib/libpdfium.so"
+            $<TARGET_FILE_DIR:MauiApp>
+        COMMENT "Копирование libpdfium.so в выходную директорию"
+    )
+endif()
+
+# Выводим информацию о размере бинарника
 add_custom_command(TARGET MauiApp POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/pdfium.dll"
-        $<TARGET_FILE_DIR:MauiApp>
-    COMMENT "Копирование pdfium.dll в выходную директорию"
+    COMMAND ls -lh $<TARGET_FILE:MauiApp>
+    COMMENT "Размер исполняемого файла:"
 )
